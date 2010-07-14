@@ -10,7 +10,7 @@ module VestalVersions
     # the existing +changes+ method is undefined. The overridden +changes+ method pertained to 
     # dirty attributes, but will not affect the partial updates functionality as that's based on
     # an underlying +changed_attributes+ method, not +changes+ itself.
-    undef_method :modifications
+    #undef_method :modifications
     serialize :modifications, Hash
 
     # In conjunction with the included Comparable module, allows comparison of version records
