@@ -68,7 +68,7 @@ module VestalVersions
       #     user.update_attribute(:last_name, "Richert")
       #   end
       #   user.version # => 2
-      #   user.versions.last.changes
+      #   user.versions.last.modifications
       #   # => {"first_name" => ["Steve", "Stephen"], "last_name" => ["Jobs", "Richert"]}
       #
       # See VestalVersions::Changes for an explanation on how changes are appended.
@@ -105,12 +105,12 @@ module VestalVersions
       #
       #   user = User.find_by_first_name("Steve")
       #   user.version # => 2
-      #   user.versions.last.changes
+      #   user.versions.last.modifications
       #   # => {"first_name" => ["Stephen", "Steve"]}
       #   user.append_version do
       #     user.last_name = "Jobs"
       #   end
-      #   user.versions.last.changes
+      #   user.versions.last.modifications
       #   # => {"first_name" => ["Stephen", "Steve"], "last_name" => ["Richert", "Jobs"]}
       #   user.version # => 2
       #
