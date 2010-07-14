@@ -5,7 +5,7 @@ class ChangesTest < Test::Unit::TestCase
     setup do
       @user = User.create(:name => 'Steve Richert')
       @user.update_attribute(:last_name, 'Jobs')
-      @changes = @user.versions.last.changes
+      @changes = @user.versions.last.modifications
     end
 
     should 'be a hash' do
@@ -42,9 +42,9 @@ class ChangesTest < Test::Unit::TestCase
 
     should "equal the model's changes" do
       @user.first_name = 'Stephen'
-      model_changes = @user.changes
+      model_changes = @user.modifications
       @user.save
-      changes = @user.versions.last.changes
+      changes = @user.versions.last.modifications
       assert_equal model_changes, changes
     end
   end
@@ -94,7 +94,7 @@ class ChangesTest < Test::Unit::TestCase
     should 'be a hash' do
       1.upto(@version) do |i|
         1.upto(@version) do |j|
-          changes = @user.changes_between(i, j)
+          changes = @user.modifications_between(i, j)
           assert_kind_of Hash, changes
         end
       end
@@ -103,7 +103,7 @@ class ChangesTest < Test::Unit::TestCase
     should 'have string keys' do
       1.upto(@version) do |i|
         1.upto(@version) do |j|
-          changes = @user.changes_between(i, j)
+          changes = @user.modifications_between(i, j)
           changes.keys.each do |key|
             assert_kind_of String, key
           end
@@ -114,7 +114,7 @@ class ChangesTest < Test::Unit::TestCase
     should 'have array values' do
       1.upto(@version) do |i|
         1.upto(@version) do |j|
-          changes = @user.changes_between(i, j)
+          changes = @user.modifications_between(i, j)
           changes.values.each do |value|
             assert_kind_of Array, value
           end
