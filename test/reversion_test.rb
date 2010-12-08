@@ -19,12 +19,12 @@ class ReversionTest < Test::Unit::TestCase
       @first_version, @last_version = @attributes.keys.min, @attributes.keys.max
     end
 
-    should 'return the new version number' do
+    should 'return the new version iteration' do
       new_version = @user.revert_to(@first_version)
       assert_equal @first_version, new_version
     end
 
-    should 'change the version number when saved' do
+    should 'change the version iteration when saved' do
       current_version = @user.version
       @user.revert_to!(@first_version)
       assert_not_equal current_version, @user.version
@@ -38,7 +38,7 @@ class ReversionTest < Test::Unit::TestCase
       end
     end
 
-    should 'be able to target a version number' do
+    should 'be able to target a version iteration' do
       @user.revert_to(1)
       assert 1, @user.version
     end
@@ -53,7 +53,7 @@ class ReversionTest < Test::Unit::TestCase
     should 'be able to target a version object' do
       @user.versions.each do |version|
         @user.revert_to(version)
-        assert_equal version.number, @user.version
+        assert_equal version.iteration, @user.version
       end
     end
 

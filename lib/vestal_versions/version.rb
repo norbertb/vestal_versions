@@ -14,16 +14,16 @@ module VestalVersions
     serialize :modifications, Hash
 
     # In conjunction with the included Comparable module, allows comparison of version records
-    # based on their corresponding version numbers, creation timestamps and IDs.
+    # based on their corresponding version iterations, creation timestamps and IDs.
     def <=>(other)
-      [number, created_at, id].map(&:to_i) <=> [other.number, other.created_at, other.id].map(&:to_i)
+      [iteration, created_at, id].map(&:to_i) <=> [other.iteration, other.created_at, other.id].map(&:to_i)
     end
 
-    # Returns whether the version has a version number of 1. Useful when deciding whether to ignore
+    # Returns whether the version has a version iteration of 1. Useful when deciding whether to ignore
     # the version during reversion, as initial versions have no serialized changes attached. Helps
     # maintain backwards compatibility.
     def initial?
-      number == 1
+      iteration == 1
     end
   end
 end

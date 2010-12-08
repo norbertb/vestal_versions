@@ -16,7 +16,7 @@ class CreateSchema < ActiveRecord::Migration
       t.belongs_to :user, :polymorphic => true
       t.string :user_name
       t.text :modifications
-      t.integer :number
+      t.integer :iteration
       t.string :tag
       t.timestamps
     end

@@ -56,7 +56,7 @@ module VestalVersions
       # Merging versions with the +merge_version+ block will take all of the versions that would
       # be created within the block and merge them into one version and pushing that single version
       # onto the ActiveRecord::Base instance's version history. A new version will be created and
-      # the instance's version number will be incremented.
+      # the instance's version iteration will be incremented.
       #
       # == Example
       #
@@ -99,7 +99,7 @@ module VestalVersions
       # block in that all would-be version creations within the block are defered until the block
       # closes. The major difference is that with +append_version+, a new version is not created.
       # Rather, the cumulative changes are appended to the serialized changes of the instance's
-      # last version. A new version is not created, so the version number is not incremented.
+      # last version. A new version is not created, so the version iteration is not incremented.
       #
       # == Example
       #
