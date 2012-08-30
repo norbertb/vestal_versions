@@ -34,12 +34,12 @@ module VestalVersions
     end
     
     # Returns the original version number that this version was.
-    def original_number
+    def original_iteration
       if reverted_from.nil?
-        number
+        iteration
       else
         version = versioned.versions.at(reverted_from)
-        version.nil? ? 1 : version.original_number
+        version.nil? ? 1 : version.original_iteration
       end
     end
 
