@@ -23,5 +23,18 @@ module VestalVersions
       end
     end
 
+    module InstanceMethods
+      def has_previous_version?
+        version > versions.minimum(:iteration) - 1
+      end
+
+      def has_next_version?
+        version < versions.maximum(:iteration)
+      end
+
+      def lastest_version?
+        ! has_next_version?
+      end
+    end
   end
 end

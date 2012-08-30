@@ -21,6 +21,7 @@ module VestalVersions
         self.vestal_versions_options[:only] = Array(options.delete(:only)).map(&:to_s).uniq if options[:only]
         self.vestal_versions_options[:except] = Array(options.delete(:except)).map(&:to_s).uniq if options[:except]
         self.vestal_versions_options[:initial_version] = options.delete(:initial_version)
+        self.vestal_versions_options[:max_versions_to_keep] = options.delete(:versions_to_keep) || 0
         
         result
       end
@@ -51,6 +52,7 @@ module VestalVersions
           versions.create(attributes || version_attributes)
           reset_version_changes
           reset_version
+          remove_version if vestal_versions_options[:versions_to_keep] > 0
         end
 
         # Returns whether the last version should be updated upon updating the parent record.
@@ -67,6 +69,11 @@ module VestalVersions
           v.update_attribute(:modifications, v.changes.append_changes(version_changes))
           reset_version_changes
           reset_version
+        end
+
+        # Remove out dated version upon creating new version
+        def remove_version
+          versions.first.destroy if versions.length >= vestal_versions_options[:versions_to_keep]
         end
 
         # Returns an array of column names that should be included in the changes of created
