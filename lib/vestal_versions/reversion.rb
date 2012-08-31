@@ -1,15 +1,11 @@
 module VestalVersions
   # Enables versioned ActiveRecord::Base instances to revert to a previously saved version.
   module Reversion
-    def self.included(base) # :nodoc:
-      base.class_eval do
-        include InstanceMethods
-      end
-    end
+    extend ActiveSupport::Concern
 
     # Provides the base instance methods required to revert a versioned instance.
     module InstanceMethods
-      # Returns the current version number for the versioned object.
+      # Returns the current version iteration for the versioned object.
       def version
         @version ||= last_version
       end
@@ -24,16 +20,16 @@ module VestalVersions
       # After the object is reverted to the target version, it is not saved. In order to save the
       # object after the reversion, use the +revert_to!+ method.
       #
-      # The version number of the object will reflect whatever version has been reverted to, and
-      # the return value of the +revert_to+ method is also the target version number.
+      # The version iteration of the object will reflect whatever version has been reverted to, and
+      # the return value of the +revert_to+ method is also the target version iteration.
       def revert_to(value)
-        to_number = versions.number_at(value)
+        to_iteration = versions.iteration_at(value)
 
-        changes_between(version, to_number).each do |attribute, change|
+        changes_between(version, to_iteration).each do |attribute, change|
           write_attribute(attribute, change.last)
         end
 
-        reset_version(to_number)
+        reset_version(to_iteration)
       end
 
       # Behaves similarly to the +revert_to+ method except that it automatically saves the record
@@ -51,17 +47,34 @@ module VestalVersions
       end
 
       private
-        # Returns the number of the last created version in the object's version history.
+
+        # Mixes in the reverted_from value if it is currently within a revert
+        def version_attributes
+          attributes = super
+
+          if @reverted_from.nil?
+            attributes
+          else
+            attributes.merge(:reverted_from => @reverted_from)
+          end
+        end
+
+        # Returns the iteration of the last created version in the object's version history.
         #
         # If no associated versions exist, the object is considered at version 1.
         def last_version
-          @last_version ||= versions.maximum(:number) || 1
+          @last_version ||= versions.maximum(:iteration) || 1
         end
 
-        # Clears the cached version number instance variables so that they can be recalculated.
+        # Clears the cached version iteration instance variables so that they can be recalculated.
         # Useful after a new version is created.
         def reset_version(version = nil)
-          @last_version = nil if version.nil?
+          if version.nil?
+            @last_version = nil
+            @reverted_from = nil
+          else
+            @reverted_from = version
+          end
           @version = version
         end
     end

@@ -2,30 +2,27 @@ module VestalVersions
   # Adds the functionality necessary to control version creation on a versioned instance of
   # ActiveRecord::Base.
   module Creation
-    def self.included(base) # :nodoc:
-      base.class_eval do
-        extend ClassMethods
-        include InstanceMethods
+    extend ActiveSupport::Concern
 
-        after_update :create_version, :if => :create_version?
-        after_update :update_version, :if => :update_version?
-
-        class << self
-          alias_method_chain :prepare_versioned_options, :creation
-        end
-      end
+    included do
+      after_create :create_initial_version, :if => :create_initial_version?
+      after_update :create_version, :if => :create_version?
+      after_update :update_version, :if => :update_version?
     end
 
     # Class methods added to ActiveRecord::Base to facilitate the creation of new versions.
     module ClassMethods
       # Overrides the basal +prepare_versioned_options+ method defined in VestalVersions::Options
-      # to extract the <tt>:only</tt> and <tt>:except</tt> options into +vestal_versions_options+.
-      def prepare_versioned_options_with_creation(options)
-        result = prepare_versioned_options_without_creation(options)
+      # to extract the <tt>:only</tt>, <tt>:except</tt> and <tt>:initial_version</tt> options
+      # into +vestal_versions_options+.
+      def prepare_versioned_options(options)
+        result = super(options)
 
         self.vestal_versions_options[:only] = Array(options.delete(:only)).map(&:to_s).uniq if options[:only]
         self.vestal_versions_options[:except] = Array(options.delete(:except)).map(&:to_s).uniq if options[:except]
-
+        self.vestal_versions_options[:initial_version] = options.delete(:initial_version)
+        self.vestal_versions_options[:max_versions_to_keep] = options.delete(:versions_to_keep) || 0
+        
         result
       end
     end
@@ -33,16 +30,29 @@ module VestalVersions
     # Instance methods that determine whether to save a version and actually perform the save.
     module InstanceMethods
       private
+        # Returns whether an initial version should be created upon creation of the parent record.
+        def create_initial_version?
+          vestal_versions_options[:initial_version] == true
+        end
+
+        # Creates an initial version upon creation of the parent record.
+        def create_initial_version
+          versions.create(version_attributes.merge(:iteration => 1))
+          reset_version_changes
+          reset_version
+        end
+                
         # Returns whether a new version should be created upon updating the parent record.
         def create_version?
           !version_changes.blank?
         end
 
         # Creates a new version upon updating the parent record.
-        def create_version
-          versions.create(version_attributes)
+        def create_version(attributes = nil)
+          versions.create(attributes || version_attributes)
           reset_version_changes
           reset_version
+          remove_version if vestal_versions_options[:versions_to_keep] > 0
         end
 
         # Returns whether the last version should be updated upon updating the parent record.
@@ -55,10 +65,15 @@ module VestalVersions
         # Updates the last version's changes by appending the current version changes.
         def update_version
           return create_version unless v = versions.last
-          v.changes_will_change!
-          v.update_attribute(:modifications, v.modifications.append_changes(version_changes))
+          v.modifications_will_change!
+          v.update_attribute(:modifications, v.changes.append_changes(version_changes))
           reset_version_changes
           reset_version
+        end
+
+        # Remove out dated version upon creating new version
+        def remove_version
+          versions.first.destroy if versions.length >= vestal_versions_options[:versions_to_keep]
         end
 
         # Returns an array of column names that should be included in the changes of created
@@ -78,7 +93,7 @@ module VestalVersions
         # Specifies the attributes used during version creation. This is separated into its own
         # method so that it can be overridden by the VestalVersions::Users feature.
         def version_attributes
-          {:modifications => version_changes, :number => last_version + 1}
+          {:modifications => version_changes, :iteration => last_version + 1}
         end
     end
   end
